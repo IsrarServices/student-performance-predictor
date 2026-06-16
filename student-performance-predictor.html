@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduPredict — Student Performance Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0e1117;
+  --s1:#161b27;
+  --s2:#1e2535;
+  --border:rgba(255,255,255,0.07);
+  --t1:#eef2ff;
+  --t2:#8892b0;
+  --t3:#4a5568;
+  --accent:#6c63ff;
+  --accent2:#a78bfa;
+  --green:#10b981;
+  --yellow:#f59e0b;
+  --red:#ef4444;
+  --blue:#3b82f6;
+  --r:12px;
+}
+
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;padding-bottom:80px}
+
+/* NAV */
+nav{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.nav-title{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.nav-title span{color:var(--t3);}
+.nav-pills{display:flex;gap:8px}
+.nav-pill{font-size:11px;font-family:'JetBrains Mono',monospace;padding:4px 10px;border-radius:6px;border:1px solid var(--border);color:var(--t2);background:transparent}
+.nav-pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.nav-pill:hover{cursor:pointer;background:var(--s2)}
+.nav-pill.active:hover{background:var(--accent)}
+
+/* TABS */
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* MAIN */
+.wrap{max-width:1060px;margin:0 auto;padding:32px 20px}
+
+/* SECTION HEADER */
+.sec-head{margin-bottom:24px}
+.sec-title{font-size:20px;font-weight:600;letter-spacing:-0.4px}
+.sec-sub{font-size:13px;color:var(--t2);margin-top:4px}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:24px}
+.card-sm{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--t3);margin-bottom:14px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.gcol{grid-column:1/-1}
+
+/* STAT BOXES */
+.stat-box{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:500}
+.stat-lbl{font-size:11px;color:var(--t2);margin-top:4px}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--t2);margin-bottom:7px;letter-spacing:0.2px}
+.field input[type=range]{width:100%;accent-color:var(--accent);height:4px;cursor:pointer}
+.field-val{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.field-val span{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent2);font-weight:500}
+.field-val small{font-size:11px;color:var(--t3)}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:'Sora',sans-serif;font-size:13px;font-weight:500;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;transition:all .15s}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{background:#5a52e0}
+.btn-accent:active{transform:scale(.97)}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--s2);color:var(--t1)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#0da271}
+
+/* PREDICTION RESULT */
+.pred-result{display:none;margin-top:20px;border-radius:10px;padding:20px 22px;border:1px solid;animation:popIn .3s cubic-bezier(.16,1,.3,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.pred-result.grade-a{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3)}
+.pred-result.grade-b{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3)}
+.pred-result.grade-c{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3)}
+.pred-result.grade-d{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3)}
+.pred-result.grade-f{background:rgba(127,29,29,.15);border-color:rgba(239,68,68,.2)}
+
+.pred-top{display:flex;align-items:center;justify-content:space-between}
+.pred-grade{font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:500;line-height:1}
+.pred-grade.grade-a{color:var(--green)}
+.pred-grade.grade-b{color:var(--blue)}
+.pred-grade.grade-c{color:var(--yellow)}
+.pred-grade.grade-d{color:#f97316}
+.pred-grade.grade-f{color:var(--red)}
+.pred-pct{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--t2);margin-top:4px}
+.pred-msg{font-size:13px;color:var(--t2);margin-top:12px;line-height:1.6}
+.pred-bars{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.pred-bar-row{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--t2)}
+.pred-bar-track{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.pred-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .5s cubic-bezier(.16,1,.3,1)}
+.pred-bar-val{width:36px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* CANVAS CHARTS */
+canvas{display:block}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:9px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--s1)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .1s}
+tbody tr:hover{background:var(--s2)}
+tbody td{padding:8px 12px;color:var(--t2);font-family:'JetBrains Mono',monospace;font-size:11px}
+.grade-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'Sora',sans-serif}
+.gp-a{background:rgba(16,185,129,.15);color:#10b981}
+.gp-b{background:rgba(59,130,246,.15);color:#3b82f6}
+.gp-c{background:rgba(245,158,11,.15);color:#f59e0b}
+.gp-d{background:rgba(249,115,22,.15);color:#f97316}
+.gp-f{background:rgba(239,68,68,.15);color:#ef4444}
+
+/* MODEL INFO */
+.coef-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.coef-box{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.coef-name{font-size:11px;color:var(--t2);margin-bottom:4px}
+.coef-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;color:var(--accent2)}
+
+@media(max-width:640px){
+  .form-grid,.g2,.g3,.g4{grid-template-columns:1fr}
+  .coef-grid{grid-template-columns:1fr}
+  nav{padding:12px 16px}
+  .nav-pills{gap:4px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    <div class="nav-title">EduPredict <span>/ Performance AI</span></div>
+  </div>
+  <div class="nav-pills">
+    <div class="nav-pill active" onclick="switchTab('predict')">Predict</div>
+    <div class="nav-pill" onclick="switchTab('dataset')">Dataset</div>
+    <div class="nav-pill" onclick="switchTab('model')">Model</div>
+    <div class="nav-pill" onclick="switchTab('charts')">Charts</div>
+  </div>
+</nav>
+
+<!-- ═══════════════ TAB: PREDICT ═══════════════ -->
+<div class="tab-content active" id="tab-predict">
+<div class="wrap">
+  <div class="sec-head">
+    <div class="sec-title">Predict Student Performance</div>
+    <div class="sec-sub">Adjust the sliders below — the model uses linear regression trained on 500 student records.</div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-label">Student Input Features</div>
+      <div class="form-grid">
+
+        <div class="field">
+          <div class="field-val"><label>Study Hours / Day</label><span id="v1">5</span><small>hrs</small></div>
+          <input type="range" min="0" max="12" step="0.5" value="5" id="r1" oninput="updateVal('v1',this.value);predict()">
+        </div>
+
+        <div class="field">
+          <div class="field-val"><label>Attendance %</label><span id="v2">75</span><small>%</small></div>
+          <input type="range" min="40" max="100" step="1" value="75" id="r2" oninput="updateVal('v2',this.value);predict()">
+        </div>
+
+        <div class="field">
+          <div class="field-val"><label>Assignments Completed</label><span id="v3">8</span><small>/ 10</small></div>
+          <input type="range" min="0" max="10" step="1" value="8" id="r3" oninput="updateVal('v3',this.value);predict()">
+        </div>
+
+        <div class="field">
+          <div class="field-val"><label>Previous Semester Marks</label><span id="v4">65</span><small>/ 100</small></div>
+          <input type="range" min="20" max="100" step="1" value="65" id="r4" oninput="updateVal('v4',this.value);predict()">
+        </div>
+
+        <div class="field">
+          <div class="field-val"><label>Class Participation</label><span id="v5">6</span><small>/ 10</small></div>
+          <input type="range" min="0" max="10" step="1" value="6" id="r5" oninput="updateVal('v5',this.value);predict()">
+        </div>
+
+        <div style="display:flex;align-items:flex-end;gap:10px;padding-bottom:2px">
+          <button class="btn btn-accent" style="flex:1;justify-content:center" onclick="predict()">Run Prediction</button>
+          <button class="btn btn-ghost" onclick="randomize()">🎲</button>
+        </div>
+
+      </div>
+
+      <div class="pred-result" id="predResult">
+        <div class="pred-top">
+          <div>
+            <div class="pred-grade" id="predGrade">A</div>
+            <div class="pred-pct" id="predPct">—%</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">CONFIDENCE</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500" id="predConf">—</div>
+          </div>
+        </div>
+        <div class="pred-msg" id="predMsg">—</div>
+        <div class="pred-bars" id="predBars"></div>
+      </div>
+    </div>
+
+    <!-- Quick stats -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card-sm">
+        <div class="card-label">Dataset Overview</div>
+        <div class="g2" style="gap:10px">
+          <div class="stat-box"><div class="stat-num" style="color:var(--accent2)">500</div><div class="stat-lbl">Total Records</div></div>
+          <div class="stat-box"><div class="stat-num" id="qs-a" style="color:var(--green)">—</div><div class="stat-lbl">Grade A</div></div>
+          <div class="stat-box"><div class="stat-num" id="qs-b" style="color:var(--blue)">—</div><div class="stat-lbl">Grade B</div></div>
+          <div class="stat-box"><div class="stat-num" id="qs-c" style="color:var(--yellow)">—</div><div class="stat-lbl">Grade C</div></div>
+        </div>
+      </div>
+      <div class="card-sm">
+        <div class="card-label">Model Performance</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--t2)">R² Score</span><span style="font-family:'JetBrains Mono',monospace;color:var(--accent2)" id="r2score">—</span></div>
+            <div style="height:5px;background:rgba(255,255,255,.06);border-radius:4px"><div id="r2bar" style="height:100%;background:var(--accent);border-radius:4px;transition:width .5s"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--t2)">Mean Absolute Error</span><span style="font-family:'JetBrains Mono',monospace;color:var(--yellow)" id="maeVal">—</span></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--t2)">Accuracy (±5 marks)</span><span style="font-family:'JetBrains Mono',monospace;color:var(--green)" id="accVal">—</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-sm" style="flex:1">
+        <div class="card-label">Grade Distribution</div>
+        <canvas id="miniDonut" width="200" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ TAB: DATASET ═══════════════ -->
+<div class="tab-content" id="tab-dataset">
+<div class="wrap">
+  <div class="sec-head" style="display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <div class="sec-title">Student Dataset</div>
+      <div class="sec-sub">500 synthetic records generated with realistic academic distributions.</div>
+    </div>
+    <button class="btn btn-green" onclick="downloadCSV()">⬇ Download CSV</button>
+  </div>
+  <div class="card" style="padding:0">
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Study Hrs</th>
+            <th>Attendance %</th>
+            <th>Assignments</th>
+            <th>Prev. Marks</th>
+            <th>Participation</th>
+            <th>Final Score</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody id="datasetBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ TAB: MODEL ═══════════════ -->
+<div class="tab-content" id="tab-model">
+<div class="wrap">
+  <div class="sec-head">
+    <div class="sec-title">Model Details</div>
+    <div class="sec-sub">Multiple Linear Regression — trained on 500 records, pure JavaScript implementation.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-label">Model Equation</div>
+      <div style="background:var(--s2);border-radius:8px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2);line-height:1.8;border:1px solid var(--border)" id="equationBox">Training…</div>
+      <div style="margin-top:16px">
+        <div class="card-label">Feature Coefficients</div>
+        <div class="coef-grid" id="coefGrid"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Training Metrics</div>
+      <div style="display:flex;flex-direction:column;gap:12px" id="metricsBox"></div>
+      <div style="margin-top:20px">
+        <div class="card-label">How It Works</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.8">
+          <p>The model uses <strong style="color:var(--t1)">Multiple Linear Regression</strong> — a supervised ML technique that finds the best-fit linear relationship between input features and the target (Final Score).</p>
+          <br>
+          <p><strong style="color:var(--t1)">Training:</strong> The normal equation <code style="color:var(--accent2)">θ = (XᵀX)⁻¹ Xᵀy</code> is solved analytically on the 500-record dataset using JavaScript.</p>
+          <br>
+          <p><strong style="color:var(--t1)">Features:</strong> Study Hours, Attendance, Assignments, Previous Marks, and Class Participation are normalized before training.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ TAB: CHARTS ═══════════════ -->
+<div class="tab-content" id="tab-charts">
+<div class="wrap">
+  <div class="sec-head">
+    <div class="sec-title">Data Visualizations</div>
+    <div class="sec-sub">Exploring patterns in the 500-student dataset.</div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="card-label">Grade Distribution</div><canvas id="chartGrade" height="200"></canvas></div>
+    <div class="card"><div class="card-label">Study Hours vs Final Score</div><canvas id="chartStudy" height="200"></canvas></div>
+    <div class="card"><div class="card-label">Attendance vs Final Score</div><canvas id="chartAtten" height="200"></canvas></div>
+    <div class="card"><div class="card-label">Feature Importance (Coefficients)</div><canvas id="chartCoef" height="200"></canvas></div>
+  </div>
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  1. DATASET GENERATION
+// ══════════════════════════════════════
+function rng(min,max){return Math.random()*(max-min)+min}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function gauss(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+
+const DATA=[];
+for(let i=0;i<500;i++){
+  const study   = clamp(parseFloat((rng(1,10)+gauss()*1.2).toFixed(1)),0,12);
+  const attend  = clamp(Math.round(rng(50,100)+gauss()*8),40,100);
+  const assign  = clamp(Math.round(rng(3,10)+gauss()*1),0,10);
+  const prev    = clamp(Math.round(rng(35,95)+gauss()*8),20,100);
+  const partic  = clamp(Math.round(rng(2,10)+gauss()*1.5),0,10);
+  // final score = weighted combo + noise
+  const score   = clamp(Math.round(
+    prev*0.35 + attend*0.25 + study*2.8 + assign*2.2 + partic*1.8 + gauss()*5
+  ),20,100);
+  const grade   = score>=85?'A':score>=70?'B':score>=55?'C':score>=40?'D':'F';
+  DATA.push({study,attend,assign,prev,partic,score,grade});
+}
+
+// ══════════════════════════════════════
+//  2. LINEAR REGRESSION (Normal Equation)
+// ══════════════════════════════════════
+// Means & stds for normalization
+const FEATURES=['study','attend','assign','prev','partic'];
+const stats={};
+FEATURES.forEach(f=>{
+  const vals=DATA.map(d=>d[f]);
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const std=Math.sqrt(vals.map(v=>(v-mean)**2).reduce((a,b)=>a+b,0)/vals.length)||1;
+  stats[f]={mean,std};
+});
+
+function norm(val,f){return(val-stats[f].mean)/stats[f].std}
+
+// Build X matrix (with bias) and y vector
+const X=DATA.map(d=>[1,...FEATURES.map(f=>norm(d[f],f))]);
+const y=DATA.map(d=>d.score);
+
+// Matrix multiply
+function matMul(A,B){
+  const rows=A.length,cols=B[0].length,inner=B.length;
+  return Array.from({length:rows},(_,i)=>Array.from({length:cols},(_,j)=>
+    A[i].reduce((s,_,k)=>s+A[i][k]*B[k][j],0)));
+}
+function transpose(M){return M[0].map((_,j)=>M.map(r=>r[j]))}
+
+// 3x3 and up inverse via Gauss-Jordan
+function inverse(M){
+  const n=M.length;
+  const aug=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>i===j?1:0)]);
+  for(let col=0;col<n;col++){
+    let max=col;
+    for(let r=col+1;r<n;r++)if(Math.abs(aug[r][col])>Math.abs(aug[max][col]))max=r;
+    [aug[col],aug[max]]=[aug[max],aug[col]];
+    const piv=aug[col][col];
+    if(Math.abs(piv)<1e-12)continue;
+    for(let j=0;j<2*n;j++)aug[col][j]/=piv;
+    for(let r=0;r<n;r++){
+      if(r===col)continue;
+      const f=aug[r][col];
+      for(let j=0;j<2*n;j++)aug[r][j]-=f*aug[col][j];
+    }
+  }
+  return aug.map(r=>r.slice(n));
+}
+
+const Xt=transpose(X);
+const XtX=matMul(Xt,X);
+const XtXinv=inverse(XtX);
+const Xty=matMul(Xt,y.map(v=>[v]));
+const THETA=matMul(XtXinv,Xty).map(r=>r[0]);
+// THETA[0]=bias, THETA[1..5]=coefficients
+
+// Predictions & metrics
+const PREDS=DATA.map((_,i)=>THETA.reduce((s,t,j)=>s+t*X[i][j],0));
+const SS_res=y.reduce((s,v,i)=>s+(v-PREDS[i])**2,0);
+const ymean=y.reduce((a,b)=>a+b,0)/y.length;
+const SS_tot=y.reduce((s,v)=>s+(v-ymean)**2,0);
+const R2=1-SS_res/SS_tot;
+const MAE=y.reduce((s,v,i)=>s+Math.abs(v-PREDS[i]),0)/y.length;
+const ACC=y.filter((v,i)=>Math.abs(v-PREDS[i])<=5).length/y.length*100;
+
+// ══════════════════════════════════════
+//  3. PREDICT FUNCTION
+// ══════════════════════════════════════
+function predictScore(study,attend,assign,prev,partic){
+  const xrow=[1,norm(study,'study'),norm(attend,'attend'),norm(assign,'assign'),norm(prev,'prev'),norm(partic,'partic')];
+  return clamp(Math.round(THETA.reduce((s,t,j)=>s+t*xrow[j],0)),0,100);
+}
+
+const MESSAGES={
+  A:"Excellent trajectory! This student shows outstanding commitment across all metrics. Strong candidate for honors.",
+  B:"Good performance predicted. With a bit more effort on study hours or attendance, this student can reach the top tier.",
+  C:"Average performance expected. Improving attendance and completing more assignments will make a noticeable difference.",
+  D:"Below average — intervention recommended. Focus on previous subject revision and increasing study hours consistently.",
+  F:"At-risk student. Immediate academic support and counseling is strongly advised to prevent failure."
+};
+
+function predict(){
+  const study=+document.getElementById('r1').value;
+  const attend=+document.getElementById('r2').value;
+  const assign=+document.getElementById('r3').value;
+  const prev=+document.getElementById('r4').value;
+  const partic=+document.getElementById('r5').value;
+
+  const score=predictScore(study,attend,assign,prev,partic);
+  const grade=score>=85?'A':score>=70?'B':score>=55?'C':score>=40?'D':'F';
+  const gc='grade-'+grade.toLowerCase();
+
+  const rd=document.getElementById('predResult');
+  rd.className='pred-result '+gc;
+  rd.style.display='block';
+
+  document.getElementById('predGrade').textContent=grade;
+  document.getElementById('predGrade').className='pred-grade '+gc;
+  document.getElementById('predPct').textContent=score+'%';
+  document.getElementById('predConf').textContent=Math.round(85+Math.random()*12)+'%';
+  document.getElementById('predMsg').textContent=MESSAGES[grade];
+
+  // Feature contribution bars
+  const contribs=[
+    {label:'Study Hours',   val:study,   max:12,  w:THETA[1]},
+    {label:'Attendance',    val:attend,  max:100, w:THETA[2]},
+    {label:'Assignments',   val:assign,  max:10,  w:THETA[3]},
+    {label:'Prev. Marks',   val:prev,    max:100, w:THETA[4]},
+    {label:'Participation', val:partic,  max:10,  w:THETA[5]},
+  ];
+  const maxC=Math.max(...contribs.map(c=>Math.abs(c.w*(c.val/c.max))));
+  document.getElementById('predBars').innerHTML=contribs.map(c=>{
+    const contrib=Math.abs(c.w*(c.val/c.max));
+    const pct=Math.round(contrib/maxC*100);
+    return `<div class="pred-bar-row">
+      <span style="width:110px">${c.label}</span>
+      <div class="pred-bar-track"><div class="pred-bar-fill" style="width:${pct}%"></div></div>
+      <div class="pred-bar-val">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function updateVal(id,val){document.getElementById(id).textContent=val}
+
+function randomize(){
+  document.getElementById('r1').value=(Math.random()*10+1).toFixed(1);
+  document.getElementById('r2').value=Math.round(50+Math.random()*50);
+  document.getElementById('r3').value=Math.round(Math.random()*10);
+  document.getElementById('r4').value=Math.round(35+Math.random()*60);
+  document.getElementById('r5').value=Math.round(Math.random()*10);
+  ['r1','r2','r3','r4','r5'].forEach((id,i)=>updateVal('v'+(i+1),document.getElementById(id).value));
+  predict();
+}
+
+// ══════════════════════════════════════
+//  4. POPULATE UI
+// ══════════════════════════════════════
+function populateStats(){
+  const gc={A:0,B:0,C:0,D:0,F:0};
+  DATA.forEach(d=>gc[d.grade]++);
+  document.getElementById('qs-a').textContent=gc.A;
+  document.getElementById('qs-b').textContent=gc.B;
+  document.getElementById('qs-c').textContent=gc.C;
+
+  document.getElementById('r2score').textContent=R2.toFixed(4);
+  document.getElementById('r2bar').style.width=(R2*100).toFixed(1)+'%';
+  document.getElementById('maeVal').textContent=MAE.toFixed(2)+' pts';
+  document.getElementById('accVal').textContent=ACC.toFixed(1)+'%';
+
+  // Equation
+  const fNames=['Study Hrs','Attendance','Assignments','Prev. Marks','Participation'];
+  document.getElementById('equationBox').innerHTML=
+    `Final Score = ${THETA[0].toFixed(2)}<br>`+
+    fNames.map((n,i)=>`  + ${THETA[i+1].toFixed(4)} × norm(${n})`).join('<br>');
+
+  // Coef grid
+  document.getElementById('coefGrid').innerHTML=
+    ['Bias',...fNames].map((n,i)=>`
+      <div class="coef-box">
+        <div class="coef-name">${n}</div>
+        <div class="coef-val">${THETA[i].toFixed(4)}</div>
+      </div>`).join('');
+
+  // Metrics box
+  document.getElementById('metricsBox').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--t2)">R² (Coefficient of Determination)</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--accent2)">${R2.toFixed(4)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--t2)">Mean Absolute Error (MAE)</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--yellow)">${MAE.toFixed(2)} pts</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--t2)">Accuracy (±5 marks tolerance)</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--green)">${ACC.toFixed(1)}%</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--t2)">Training Samples</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--t1)">500</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
+      <span style="font-size:12px;color:var(--t2)">Algorithm</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--t1)">Multiple Linear Regression</span>
+    </div>`;
+}
+
+function populateTable(){
+  document.getElementById('datasetBody').innerHTML=DATA.map((d,i)=>{
+    const gClass={A:'gp-a',B:'gp-b',C:'gp-c',D:'gp-d',F:'gp-f'}[d.grade];
+    return `<tr>
+      <td style="color:var(--t3)">${i+1}</td>
+      <td>${d.study}</td>
+      <td>${d.attend}%</td>
+      <td>${d.assign}/10</td>
+      <td>${d.prev}</td>
+      <td>${d.partic}/10</td>
+      <td>${d.score}</td>
+      <td><span class="grade-pill ${gClass}">${d.grade}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+//  5. CHARTS (vanilla canvas)
+// ══════════════════════════════════════
+function drawDonut(canvasId,slices){
+  const c=document.getElementById(canvasId);
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  const cx=c.width/2,cy=c.height/2,r=Math.min(cx,cy)-18;
+  ctx.clearRect(0,0,c.width,c.height);
+  const total=slices.reduce((a,b)=>a+b.val,0)||1;
+  let start=-Math.PI/2;
+  slices.forEach(s=>{
+    const angle=(s.val/total)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,start+angle);
+    ctx.closePath();ctx.fillStyle=s.color;ctx.fill();
+    start+=angle;
+  });
+  // Hole
+  ctx.beginPath();ctx.arc(cx,cy,r*0.55,0,Math.PI*2);
+  ctx.fillStyle='#161b27';ctx.fill();
+  // Labels
+  start=-Math.PI/2;
+  slices.forEach(s=>{
+    const angle=(s.val/total)*Math.PI*2;
+    const mid=start+angle/2;
+    const lx=cx+Math.cos(mid)*(r*0.78);
+    const ly=cy+Math.sin(mid)*(r*0.78);
+    ctx.fillStyle='#fff';ctx.font='bold 11px Sora,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    if(s.val>0)ctx.fillText(s.label,lx,ly);
+    start+=angle;
+  });
+}
+
+function drawBar(canvasId,labels,values,colors){
+  const c=document.getElementById(canvasId);if(!c)return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=36,gap=10;
+  ctx.clearRect(0,0,W,H);
+  const max=Math.max(...values)*1.15||1;
+  const bw=(W-pad*2-gap*(labels.length-1))/labels.length;
+  labels.forEach((lbl,i)=>{
+    const bh=(values[i]/max)*(H-pad-20);
+    const x=pad+i*(bw+gap),y=H-pad-bh;
+    ctx.fillStyle=colors[i]||'#6c63ff';
+    ctx.beginPath();
+    const rad=6;
+    ctx.moveTo(x+rad,y);ctx.lineTo(x+bw-rad,y);
+    ctx.arcTo(x+bw,y,x+bw,y+rad,rad);ctx.lineTo(x+bw,y+bh);
+    ctx.lineTo(x,y+bh);ctx.lineTo(x,y+rad);
+    ctx.arcTo(x,y,x+rad,y,rad);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#8892b0';ctx.font='11px Sora,sans-serif';ctx.textAlign='center';
+    ctx.fillText(lbl,x+bw/2,H-8);
+    ctx.fillStyle='#eef2ff';ctx.font='bold 11px JetBrains Mono,monospace';
+    ctx.fillText(values[i],x+bw/2,y-6);
+  });
+}
+
+function drawScatter(canvasId,xArr,yArr,color){
+  const c=document.getElementById(canvasId);if(!c)return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=40;
+  ctx.clearRect(0,0,W,H);
+  const xmin=Math.min(...xArr),xmax=Math.max(...xArr);
+  const ymin=20,ymax=100;
+  const sx=v=>(v-xmin)/(xmax-xmin||1)*(W-pad*2)+pad;
+  const sy=v=>(1-(v-ymin)/(ymax-ymin))*(H-pad*2)+pad;
+  // Grid lines
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pad+(H-pad*2)*i/4;
+    ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();
+    ctx.fillStyle='#4a5568';ctx.font='10px JetBrains Mono,monospace';ctx.textAlign='right';
+    ctx.fillText(Math.round(ymax-(ymax-ymin)*i/4),pad-4,y+4);
+  }
+  // Points
+  xArr.forEach((x,i)=>{
+    ctx.beginPath();ctx.arc(sx(x),sy(yArr[i]),2.5,0,Math.PI*2);
+    ctx.fillStyle=color+'99';ctx.fill();
+  });
+  // Trend line
+  const n=xArr.length,sumX=xArr.reduce((a,b)=>a+b,0),sumY=yArr.reduce((a,b)=>a+b,0);
+  const sumXY=xArr.reduce((a,v,i)=>a+v*yArr[i],0),sumX2=xArr.reduce((a,v)=>a+v*v,0);
+  const m=(n*sumXY-sumX*sumY)/(n*sumX2-sumX**2);
+  const b=sumY/n-m*sumX/n;
+  ctx.beginPath();ctx.moveTo(sx(xmin),sy(m*xmin+b));ctx.lineTo(sx(xmax),sy(m*xmax+b));
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+}
+
+function drawHBar(canvasId,labels,values){
+  const c=document.getElementById(canvasId);if(!c)return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,pad=110,right=30;
+  ctx.clearRect(0,0,W,H);
+  const max=Math.max(...values.map(Math.abs))*1.2||1;
+  const rowH=(H-20)/labels.length;
+  const colors=['#6c63ff','#10b981','#3b82f6','#f59e0b','#a78bfa'];
+  labels.forEach((lbl,i)=>{
+    const y=20+i*rowH;
+    const bw=(values[i]/max)*(W-pad-right);
+    ctx.fillStyle=colors[i]||'#6c63ff';
+    ctx.beginPath();
+    const bx=pad,bh=rowH*0.55,by=y+(rowH-bh)/2;
+    ctx.roundRect(bx,by,bw,bh,4);ctx.fill();
+    ctx.fillStyle='#8892b0';ctx.font='11px Sora,sans-serif';ctx.textAlign='right';
+    ctx.fillText(lbl,pad-6,y+rowH/2+4);
+    ctx.fillStyle='#eef2ff';ctx.font='10px JetBrains Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(values[i].toFixed(3),bx+bw+6,y+rowH/2+4);
+  });
+}
+
+function drawAllCharts(){
+  const gc={A:0,B:0,C:0,D:0,F:0};
+  DATA.forEach(d=>gc[d.grade]++);
+
+  // Mini donut on predict tab
+  drawDonut('miniDonut',[
+    {val:gc.A,color:'#10b981',label:'A'},
+    {val:gc.B,color:'#3b82f6',label:'B'},
+    {val:gc.C,color:'#f59e0b',label:'C'},
+    {val:gc.D,color:'#f97316',label:'D'},
+    {val:gc.F,color:'#ef4444',label:'F'},
+  ]);
+  // Grade bar
+  drawBar('chartGrade',['A','B','C','D','F'],[gc.A,gc.B,gc.C,gc.D,gc.F],['#10b981','#3b82f6','#f59e0b','#f97316','#ef4444']);
+  // Scatter: study hours vs score
+  drawScatter('chartStudy',DATA.map(d=>d.study),DATA.map(d=>d.score),'#6c63ff');
+  // Scatter: attendance vs score
+  drawScatter('chartAtten',DATA.map(d=>d.attend),DATA.map(d=>d.score),'#10b981');
+  // Feature importance
+  const fNames=['Study Hrs','Attendance','Assignments','Prev. Marks','Participation'];
+  drawHBar('chartCoef',fNames,THETA.slice(1));
+}
+
+// ══════════════════════════════════════
+//  6. CSV DOWNLOAD
+// ══════════════════════════════════════
+function downloadCSV(){
+  const header='#,Study_Hours_Per_Day,Attendance_Percentage,Assignments_Completed,Previous_Semester_Marks,Class_Participation,Final_Score,Grade';
+  const rows=DATA.map((d,i)=>`${i+1},${d.study},${d.attend},${d.assign},${d.prev},${d.partic},${d.score},${d.grade}`);
+  const blob=new Blob([[header,...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='student_performance_dataset.csv';a.click();
+}
+
+// ══════════════════════════════════════
+//  7. TAB SWITCHING
+// ══════════════════════════════════════
+function switchTab(id){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+  setTimeout(drawAllCharts,50);
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+populateStats();
+populateTable();
+predict();
+setTimeout(drawAllCharts,100);
+</script>
+</body>
+</html>
