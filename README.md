@@ -2,7 +2,7 @@
 
 A web application that predicts a student's academic performance using **Multiple Linear Regression**, built entirely with HTML, CSS, and JavaScript — no backend, no external libraries. This project was developed as part of my internship assignment.
 
-🔗 **Live Demo:** _[add your GitHub Pages link here]_
+🔗 **Live Demo:** [ https://israrservices.github.io/student-performance-predictor/student-performance-predictor.html ]
 
 ---
 
